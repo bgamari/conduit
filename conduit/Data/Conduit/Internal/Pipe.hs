@@ -59,6 +59,9 @@ import Control.Monad.Base (MonadBase (liftBase))
 import Control.Monad.Primitive (PrimMonad, PrimState, primitive)
 import Data.Void (Void, absurd)
 import Data.Monoid (Monoid (mappend, mempty))
+#if MIN_VERSION_base(4,9,0)
+import Data.Semigroup
+#endif
 import Control.Monad.Trans.Resource
 import qualified GHC.Exts
 import Control.Monad.Morph (MFunctor (..))
@@ -151,11 +154,19 @@ instance Catch.MonadCatch m => Catch.MonadCatch (Pipe l i o u m) where
         go (HaveOutput p c o) = HaveOutput (go p) c o
     {-# INLINE catch #-}
 
+#if MIN_VERSION_base(4,9,0)
+instance Monad m => Semigroup (Pipe l i o u m ()) where
+    (<>) = (>>)
+    {-# INLINE (<>) #-}
+#endif
+
 instance Monad m => Monoid (Pipe l i o u m ()) where
     mempty = return ()
     {-# INLINE mempty #-}
+#if MIN_VERSION_base(4,11,0)
     mappend = (>>)
     {-# INLINE mappend #-}
+#endif
 
 instance PrimMonad m => PrimMonad (Pipe l i o u m) where
   type PrimState (Pipe l i o u m) = PrimState m

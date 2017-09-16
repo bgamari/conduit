@@ -102,6 +102,9 @@ import Control.Monad.Base (MonadBase (liftBase))
 import Control.Monad.Primitive (PrimMonad, PrimState, primitive)
 import Data.Void (Void, absurd)
 import Data.Monoid (Monoid (mappend, mempty))
+#if MIN_VERSION_base(4,9,0)
+import Data.Semigroup
+#endif
 import Control.Monad.Trans.Resource
 import qualified Data.IORef as I
 import Control.Monad.Morph (MFunctor (..))
@@ -247,11 +250,19 @@ instance MonadResource m => MonadResource (ConduitM i o m) where
     liftResourceT = lift . liftResourceT
     {-# INLINE liftResourceT #-}
 
+#if MIN_VERSION_base(4,9,0)
+instance Monad m => Semigroup (ConduitM i o m ()) where
+    (<>) = (>>)
+    {-# INLINE (<>) #-}
+#endif
+
 instance Monad m => Monoid (ConduitM i o m ()) where
     mempty = return ()
     {-# INLINE mempty #-}
+#if !(MIN_VERSION_base(4,11,0))
     mappend = (>>)
     {-# INLINE mappend #-}
+#endif
 
 instance PrimMonad m => PrimMonad (ConduitM i o m) where
   type PrimState (ConduitM i o m) = PrimState m
